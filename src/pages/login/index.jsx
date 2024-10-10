@@ -1,25 +1,26 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import Cookies from 'js-cookie';
-import { Lock, Mail } from 'lucide-react';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import Cookies from "js-cookie";
+import { Lock, Mail } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { pageRoutes } from '@/apiRoutes';
-import { EMAIL_PATTERN } from '@/constants';
-import { auth } from '@/firebase';
-import { Layout, authStatusType } from '@/pages/common/components/Layout';
-import { setIsLogin, setUser } from '@/store/auth/authSlice';
-import { useAppDispatch } from '@/store/hooks';
+import { pageRoutes } from "@/apiRoutes";
+import { EMAIL_PATTERN } from "@/constants";
+import { auth } from "@/firebase";
+import { Layout, authStatusType } from "@/pages/common/components/Layout";
+import useAuthStore from "@/store/auth/useAuthStore";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Zustand에서 로그인 상태와 사용자 정보 업데이트 함수 가져오기
+  const { setIsLogin, setUser } = useAuthStore();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
 
   const handleClickRegister = () => {
@@ -29,12 +30,12 @@ export const LoginPage = () => {
   const validateForm = () => {
     let formErrors = {};
     if (!email) {
-      formErrors.email = '이메일을 입력하세요';
+      formErrors.email = "이메일을 입력하세요";
     } else if (!EMAIL_PATTERN.test(email)) {
-      formErrors.email = '이메일 양식이 올바르지 않습니다';
+      formErrors.email = "이메일 양식이 올바르지 않습니다";
     }
     if (!password) {
-      formErrors.password = '비밀번호를 입력하세요';
+      formErrors.password = "비밀번호를 입력하세요";
     }
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
@@ -52,27 +53,26 @@ export const LoginPage = () => {
         const user = userCredential.user;
         const token = await user.getIdToken();
 
-        Cookies.set('accessToken', token, { expires: 7 });
+        Cookies.set("accessToken", token, { expires: 7 });
 
-        dispatch(setIsLogin(true));
+        // Zustand 상태 업데이트
+        setIsLogin(true);
         if (user) {
-          dispatch(
-            setUser({
-              uid: user.uid,
-              email: user.email ?? '',
-              displayName: user.displayName ?? '',
-            })
-          );
+          setUser({
+            uid: user.uid,
+            email: user.email ?? "",
+            displayName: user.displayName ?? "",
+          });
         }
 
         navigate(pageRoutes.main);
       } catch (error) {
         console.error(
-          '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
+          "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.",
           error
         );
         setErrors({
-          form: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
+          form: "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.",
         });
       }
     }

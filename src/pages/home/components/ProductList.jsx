@@ -1,82 +1,81 @@
-import { Button } from '@/components/ui/button';
-import { ChevronDown, Plus } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Plus } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { pageRoutes } from '@/apiRoutes';
-import { PRODUCT_PAGE_SIZE } from '@/constants';
-import { extractIndexLink, isFirebaseIndexError } from '@/helpers/error';
-import { useModal } from '@/hooks/useModal';
-import { FirebaseIndexErrorModal } from '@/pages/error/components/FirebaseIndexErrorModal';
-import { selectIsLogin, selectUser } from '@/store/auth/authSelectors';
-import { addCartItem } from '@/store/cart/cartSlice';
-import { selectFilter } from '@/store/filter/filterSelectors';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loadProducts } from '@/store/product/productsActions';
-import {
-  selectHasNextPage,
-  selectIsLoading,
-  selectProducts,
-  selectTotalCount,
-} from '@/store/product/productsSelectors';
-
-import { ProductCardSkeleton } from '../skeletons/ProductCardSkeleton';
-import { EmptyProduct } from './EmptyProduct';
-import { ProductCard } from './ProductCard';
-import { ProductRegistrationModal } from './ProductRegistrationModal';
+import { pageRoutes } from "@/apiRoutes";
+import { PRODUCT_PAGE_SIZE } from "@/constants";
+// import { extractIndexLink, isFirebaseIndexError } from "@/helpers/error";
+import { useModal } from "@/hooks/useModal";
+import { FirebaseIndexErrorModal } from "@/pages/error/components/FirebaseIndexErrorModal";
+import { ProductCardSkeleton } from "../skeletons/ProductCardSkeleton";
+import { EmptyProduct } from "./EmptyProduct";
+import { ProductCard } from "./ProductCard";
+import { ProductRegistrationModal } from "./ProductRegistrationModal";
+import useFilterStore from "@/store/filter/useFilterStore";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProducts } from "@/api/product";
+import useProductStore from "@/store/product/useProductStore";
+import useAuthStore from "@/store/auth/useAuthStore";
+import useCartStore from "@/store/cart/useCartStore";
 
 export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const { addCartItem } = useCartStore();
   const { isOpen, openModal, closeModal } = useModal();
   const [currentPage, setCurrentPage] = useState(1);
   const [isIndexErrorModalOpen, setIsIndexErrorModalOpen] = useState(false);
   const [indexLink, setIndexLink] = useState(null);
 
-  const products = useAppSelector(selectProducts);
-  const hasNextPage = useAppSelector(selectHasNextPage);
-  const isLoading = useAppSelector(selectIsLoading);
-  const filter = useAppSelector(selectFilter);
-  const user = useAppSelector(selectUser);
-  const isLogin = useAppSelector(selectIsLogin);
-  const totalCount = useAppSelector(selectTotalCount);
+  // filter 상태를 useMemo로 캐싱
+  const filter = useMemo(() => {
+    const { minPrice, maxPrice, title, categoryId } = useFilterStore.getState();
+    return { minPrice, maxPrice, title, categoryId };
+  }, [
+    useFilterStore((state) => state.minPrice),
+    useFilterStore((state) => state.maxPrice),
+    useFilterStore((state) => state.title),
+    useFilterStore((state) => state.categoryId),
+  ]);
 
-  const loadProductsData = async (isInitial = false) => {
-    try {
-      const page = isInitial ? 1 : currentPage + 1;
-      await dispatch(
-        loadProducts({
-          filter,
-          pageSize,
-          page,
-          isInitial,
-        })
-      ).unwrap();
-      if (!isInitial) {
-        setCurrentPage(page);
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+  const { user, isLogin } = useAuthStore();
+  const {
+    products,
+    hasNextPage,
+    totalCount,
+    setProducts,
+    setHasNextPage,
+    setTotalCount,
+  } = useProductStore();
 
-      if (isFirebaseIndexError(errorMessage)) {
-        const link = extractIndexLink(errorMessage);
-        setIndexLink(link);
-        setIsIndexErrorModalOpen(true);
-      }
-      throw error;
-    }
-  };
+  // useLoadProducts를 사용하여 제품 데이터를 불러옴
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["products", currentPage, filter], // currentPage를 queryKey에 포함
+    queryFn: () => fetchProducts(filter, pageSize, currentPage), // 데이터를 가져오는 함수
+  });
 
-  useEffect(() => {
-    setCurrentPage(1);
-    loadProductsData(true);
-  }, [filter]);
+  // Todo: 에러 처리
+  // useEffect(() => {
+  //   console.log(isError);
+  //   console.log(error);
+  //   if (isError && error) {
+  //     const errorMessage =
+  //       error instanceof Error ? isError.message : String(isError);
+
+  //     if (isFirebaseIndexError(errorMessage)) {
+  //       const link = extractIndexLink(errorMessage);
+  //       setIndexLink(link);
+  //       setIsIndexErrorModalOpen(true); // 인덱스 오류 모달을 열기
+  //     } else {
+  //       console.error("Unhandled error:", errorMessage); // 다른 오류 처리
+  //     }
+  //   }
+  // }, [isError, error]);
 
   const handleCartAction = (product) => {
     if (isLogin && user) {
       const cartItem = { ...product, count: 1 };
-      dispatch(addCartItem({ item: cartItem, userId: user.uid, count: 1 }));
+      addCartItem({ item: cartItem, userId: user.uid, count: 1 });
       console.log(`${product.title} 상품이 \n장바구니에 담겼습니다.`);
     } else {
       navigate(pageRoutes.login);
@@ -86,16 +85,19 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
   const handlePurchaseAction = (product) => {
     if (isLogin && user) {
       const cartItem = { ...product, count: 1 };
-      dispatch(addCartItem({ item: cartItem, userId: user.uid, count: 1 }));
+      addCartItem({ item: cartItem, userId: user.uid, count: 1 });
       navigate(pageRoutes.cart);
     } else {
       navigate(pageRoutes.login);
     }
   };
 
+  const loadMore = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
   const handleProductAdded = () => {
     setCurrentPage(1);
-    loadProductsData(true);
   };
 
   const firstProductImage = products[0]?.image;
@@ -106,6 +108,26 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
       img.src = firstProductImage;
     }
   }, [firstProductImage]);
+
+  useEffect(() => {
+    if (data) {
+      setProducts(data.products);
+      setHasNextPage(data.hasNextPage);
+      setTotalCount(data.totalCount);
+      setCurrentPage(currentPage);
+    }
+  }, [
+    data,
+    setProducts,
+    setHasNextPage,
+    setTotalCount,
+    setCurrentPage,
+    currentPage,
+  ]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   return (
     <>
@@ -146,8 +168,8 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
             </div>
             {hasNextPage && currentPage * pageSize < totalCount && (
               <div className="flex justify-center mt-4">
-                <Button onClick={() => loadProductsData()} disabled={isLoading}>
-                  {isLoading ? '로딩 중...' : '더 보기'}
+                <Button onClick={loadMore} disabled={isLoading}>
+                  {isLoading ? "로딩 중..." : "더 보기"}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </div>

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -6,16 +6,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { ShoppingCart } from 'lucide-react';
-import React from 'react';
-
-import { selectCart } from '@/store/cart/cartSelectors';
-import { useAppSelector } from '@/store/hooks';
-import { formatPrice } from '@/utils/formatter';
+} from "@/components/ui/table";
+import { ShoppingCart } from "lucide-react";
+import React from "react";
+import { formatPrice } from "@/utils/formatter";
+import useCartStore from "@/store/cart/useCartStore";
 
 export const ItemList = () => {
-  const cart = useAppSelector(selectCart);
+  const { cart } = useCartStore();
 
   return (
     <Card className="mt-6">

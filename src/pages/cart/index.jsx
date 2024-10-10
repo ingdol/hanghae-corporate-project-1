@@ -1,12 +1,11 @@
-import { CartTable } from '@/pages/cart/components/CartTable';
-import { EmptyNotice } from '@/pages/cart/components/EmptyNotice';
-import { Layout, authStatusType } from '@/pages/common/components/Layout';
-import { selectCart } from '@/store/cart/cartSelectors';
-import { useAppSelector } from '@/store/hooks';
-import React from 'react';
+import { CartTable } from "@/pages/cart/components/CartTable";
+import { EmptyNotice } from "@/pages/cart/components/EmptyNotice";
+import { Layout, authStatusType } from "@/pages/common/components/Layout";
+import React from "react";
+import useCartStore from "@/store/cart/useCartStore";
 
 export const Cart = () => {
-  const cart = useAppSelector(selectCart);
+  const { cart } = useCartStore();
   const isExist = cart.length > 0;
 
   return (

@@ -1,15 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { CreditCard } from 'lucide-react';
-import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { CreditCard } from "lucide-react";
+import React from "react";
 
-import { PaymentMethodTableRow } from '@/pages/purchase/components/PaymentMethodTableRow';
-import { selectTotalPrice } from '@/store/cart/cartSelectors';
-import { useAppSelector } from '@/store/hooks';
-import { formatPrice } from '@/utils/formatter';
+import { PaymentMethodTableRow } from "@/pages/purchase/components/PaymentMethodTableRow";
+import { formatPrice } from "@/utils/formatter";
+import useCartStore from "@/store/cart/useCartStore";
 
 export const Payment = ({ paymentMethod, onPaymentMethodChange }) => {
-  const totalPrice = useAppSelector(selectTotalPrice);
+  const { totalPrice } = useCartStore();
   const shippingCost = 3000;
 
   const getTotalPrice = () => {

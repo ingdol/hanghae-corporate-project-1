@@ -1,7 +1,7 @@
-import { getItem, setItem } from '@/helpers/localStorage';
-import { parseJSON } from '@/utils/common';
+import { getItem, setItem } from "@/helpers/localStorage";
+import { parseJSON } from "@/utils/common";
 
-const CART_LOCAL_STORAGE_KEY = 'CART_LOCAL_STORAGE_KEY';
+const CART_LOCAL_STORAGE_KEY = "CART_LOCAL_STORAGE_KEY";
 
 export const getCartFromLocalStorage = (userId) => {
   const cartData = getItem(CART_LOCAL_STORAGE_KEY);

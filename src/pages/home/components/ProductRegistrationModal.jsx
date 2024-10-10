@@ -1,34 +1,32 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { ALL_CATEGORY_ID, categories } from '@/constants';
-import React, { useState } from 'react';
-
-import { createNewProduct, initialProductState } from '@/helpers/product';
-import { useAppDispatch } from '@/store/hooks';
-import { addProduct } from '@/store/product/productsActions';
-import { uploadImage } from '@/utils/imageUpload';
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ALL_CATEGORY_ID, categories } from "@/constants";
+import React, { useState } from "react";
+import { createNewProduct, initialProductState } from "@/helpers/product";
+import { uploadImage } from "@/utils/imageUpload";
+import { useAddProduct } from "@/hooks/useAddProduct";
 
 export const ProductRegistrationModal = ({
   isOpen,
   onClose,
   onProductAdded,
 }) => {
-  const dispatch = useAppDispatch();
+  const productMutation = useAddProduct();
   const [product, setProduct] = useState(initialProductState);
 
   const handleChange = (e) => {
@@ -47,20 +45,20 @@ export const ProductRegistrationModal = ({
   const handleSubmit = async () => {
     try {
       if (!product.image) {
-        throw new Error('이미지를 선택해야 합니다.');
+        throw new Error("이미지를 선택해야 합니다.");
       }
 
       const imageUrl = await uploadImage(product.image);
       if (!imageUrl) {
-        throw new Error('이미지 업로드에 실패했습니다.');
+        throw new Error("이미지 업로드에 실패했습니다.");
       }
 
       const newProduct = createNewProduct(product, imageUrl);
-      await dispatch(addProduct(newProduct));
+      productMutation.mutate(newProduct);
       onClose();
       onProductAdded();
     } catch (error) {
-      console.error('물품 등록에 실패했습니다.', error);
+      console.error("물품 등록에 실패했습니다.", error);
     }
   };
 
@@ -82,26 +80,26 @@ export const ProductRegistrationModal = ({
             name="title"
             placeholder="상품명"
             onChange={handleChange}
-            value={product.title || ''}
+            value={product.title || ""}
           />
           <Input
             name="price"
             type="number"
             placeholder="가격"
             onChange={handleChange}
-            value={product.price || ''}
+            value={product.price || ""}
           />
           <Textarea
             name="description"
             className="resize-none"
             placeholder="상품 설명"
             onChange={handleChange}
-            value={product.description || ''}
+            value={product.description || ""}
           />
           <Select
             name="categoryId"
             onValueChange={handleCategoryChange}
-            value={product.category.id || ''}
+            value={product.category.id || ""}
           >
             <SelectTrigger>
               <SelectValue placeholder="카테고리 선택" />

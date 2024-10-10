@@ -1,73 +1,51 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Lock, Mail, User } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import { pageRoutes } from '@/apiRoutes';
-import { EMAIL_PATTERN } from '@/constants';
-import { Layout, authStatusType } from '@/pages/common/components/Layout';
-import { registerUser } from '@/store/auth/authActions';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { EMAIL_PATTERN } from "@/constants";
+import { useRegisterUser } from "@/hooks/useRegisterUser";
+import { Layout, authStatusType } from "@/pages/common/components/Layout";
+import { Lock, Mail, User } from "lucide-react";
+import React, { useState } from "react";
 
 export const RegisterPage = () => {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { registerStatus, registerError } = useAppSelector(
-    (state) => state.auth
-  );
-
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (registerStatus === 'succeeded') {
-      navigate(pageRoutes.login);
-    }
-  }, [registerStatus, navigate]);
+  const registerMutation = useRegisterUser();
 
   const validateForm = () => {
     let formErrors = {};
-    if (!name) formErrors.name = '이름을 입력하세요';
+    if (!name) formErrors.name = "이름을 입력하세요";
     if (!email) {
-      formErrors.email = '이메일을 입력하세요';
+      formErrors.email = "이메일을 입력하세요";
     } else if (!EMAIL_PATTERN.test(email)) {
-      formErrors.email = '이메일 양식이 올바르지 않습니다';
+      formErrors.email = "이메일 양식이 올바르지 않습니다";
     }
-    if (!password) formErrors.password = '비밀번호를 입력하세요';
+    if (!password) formErrors.password = "비밀번호를 입력하세요";
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      try {
-        await dispatch(registerUser({ email, password, name })).unwrap();
-        console.log('가입 성공!');
-        navigate(pageRoutes.login);
-      } catch (error) {
-        console.error(
-          '회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.',
-          error
-        );
-      }
+      registerMutation.mutate({ email, password, name });
     }
   };
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     switch (id) {
-      case 'name':
+      case "name":
         setName(value);
         break;
-      case 'email':
+      case "email":
         setEmail(value);
         break;
-      case 'password':
+      case "password":
         setPassword(value);
         break;
     }
@@ -128,12 +106,15 @@ export const RegisterPage = () => {
           <Button
             type="submit"
             className="w-full"
-            disabled={registerStatus === 'loading'}
+            disabled={registerMutation.isPending}
           >
-            {registerStatus === 'loading' ? '가입 중...' : '회원가입'}
+            {registerMutation.isPending ? "가입 중..." : "회원가입"}
           </Button>
-          {registerError && (
-            <p className="text-sm text-red-500">{registerError}</p>
+          {registerMutation.isError && (
+            <p className="text-sm text-red-500">
+              {registerMutation.error?.message ||
+                "회원가입 중 오류가 발생했습니다."}
+            </p>
           )}
         </form>
       </div>

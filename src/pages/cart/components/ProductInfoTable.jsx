@@ -4,16 +4,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { ProductInfoTableRow } from '@/pages/cart/components/ProductInfoTableRow';
-import { selectUser } from '@/store/auth/authSelectors';
-import { selectCart } from '@/store/cart/cartSelectors';
-import { useAppSelector } from '@/store/hooks';
-import React from 'react';
+} from "@/components/ui/table";
+import { ProductInfoTableRow } from "@/pages/cart/components/ProductInfoTableRow";
+import React from "react";
+import useAuthStore from "@/store/auth/useAuthStore";
+import useCartStore from "@/store/cart/useCartStore";
 
 export const ProductInfoTable = () => {
-  const cart = useAppSelector(selectCart);
-  const user = useAppSelector(selectUser);
+  const { cart } = useCartStore();
+  const { user } = useAuthStore();
 
   return (
     <Table>

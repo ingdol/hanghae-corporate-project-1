@@ -1,15 +1,13 @@
-import { pageRoutes } from '@/apiRoutes';
-import { Button } from '@/components/ui/button';
-import { selectTotalCount, selectTotalPrice } from '@/store/cart/cartSelectors';
-import { useAppSelector } from '@/store/hooks';
-import { formatNumber, formatPrice } from '@/utils/formatter';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { pageRoutes } from "@/apiRoutes";
+import { Button } from "@/components/ui/button";
+import { formatNumber, formatPrice } from "@/utils/formatter";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import useCartStore from "@/store/cart/useCartStore";
 
 export const PriceSummary = () => {
   const navigate = useNavigate();
-  const totalCount = useAppSelector(selectTotalCount);
-  const totalPrice = useAppSelector(selectTotalPrice);
+  const { totalCount, totalPrice } = useCartStore();
 
   const handleClickPurchase = () => {
     navigate(pageRoutes.purchase);
