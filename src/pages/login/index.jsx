@@ -56,7 +56,6 @@ export const LoginPage = () => {
 
         Cookies.set("accessToken", token, { expires: 7 });
 
-        // Zustand 상태 업데이트
         setIsLogin(true);
         if (user) {
           setUser({

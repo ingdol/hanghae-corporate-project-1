@@ -1,14 +1,21 @@
 import { create } from "zustand";
+import { getItem, setItem } from "@/helpers/localStorage";
 
 const useAuthStore = create((set) => ({
-  isLogin: false,
+  isLogin: getItem("isLogin") === "true",
   user: null,
   registerStatus: "idle",
   registerError: null,
 
-  setIsLogin: (isLogin) => set({ isLogin }),
+  setIsLogin: (isLogin) => {
+    setItem("isLogin", isLogin);
+    set({ isLogin });
+  },
   setUser: (user) => set({ user, isLogin: true }),
-  logout: () => set({ isLogin: false, user: null }),
+  logout: () => {
+    setItem("isLogin", false);
+    set({ isLogin: false, user: null });
+  },
 }));
 
 export default useAuthStore;
