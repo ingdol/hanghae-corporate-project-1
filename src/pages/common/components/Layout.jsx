@@ -3,6 +3,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { NavigationBar } from "./NavigationBar";
 import useAuthStore from "@/store/auth/useAuthStore";
+import ToastPopup from "@/components/ToastPopup";
 
 export const authStatusType = {
   NEED_LOGIN: "NEED_LOGIN",
@@ -35,6 +36,7 @@ export const Layout = ({
           </div>
         </main>
       </div>
+      <ToastPopup />
     </div>
   );
 };

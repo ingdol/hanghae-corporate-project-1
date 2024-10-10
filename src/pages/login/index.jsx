@@ -12,12 +12,13 @@ import { EMAIL_PATTERN } from "@/constants";
 import { auth } from "@/firebase";
 import { Layout, authStatusType } from "@/pages/common/components/Layout";
 import useAuthStore from "@/store/auth/useAuthStore";
+import useToastStore from "@/store/toast/useToastStore";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
 
-  // Zustand에서 로그인 상태와 사용자 정보 업데이트 함수 가져오기
   const { setIsLogin, setUser } = useAuthStore();
+  const { showToast } = useToastStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,6 +66,7 @@ export const LoginPage = () => {
           });
         }
 
+        showToast(`${user.email}로 로그인되었습니다.`);
         navigate(pageRoutes.main);
       } catch (error) {
         console.error(
