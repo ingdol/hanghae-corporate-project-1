@@ -50,8 +50,8 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
 
   // useLoadProducts를 사용하여 제품 데이터를 불러옴
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["products", currentPage, filter], // currentPage를 queryKey에 포함
-    queryFn: () => fetchProducts(filter, pageSize, currentPage), // 데이터를 가져오는 함수
+    queryKey: ["products", currentPage, filter],
+    queryFn: () => fetchProducts(filter, pageSize, currentPage),
   });
 
   // Todo: 에러 처리

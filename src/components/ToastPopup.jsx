@@ -1,4 +1,3 @@
-// components/Toast.js
 import React, { useEffect } from "react";
 import useToastStore from "@/store/toast/useToastStore";
 
