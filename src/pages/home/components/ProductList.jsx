@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Plus } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { pageRoutes } from "@/apiRoutes";
 import { PRODUCT_PAGE_SIZE } from "@/constants";
-// import { extractIndexLink, isFirebaseIndexError } from "@/helpers/error";
 import { useModal } from "@/hooks/useModal";
 import { FirebaseIndexErrorModal } from "@/pages/error/components/FirebaseIndexErrorModal";
 import { ProductCardSkeleton } from "../skeletons/ProductCardSkeleton";
@@ -18,6 +17,7 @@ import { fetchProducts } from "@/api/product";
 import useProductStore from "@/store/product/useProductStore";
 import useAuthStore from "@/store/auth/useAuthStore";
 import useCartStore from "@/store/cart/useCartStore";
+import { extractIndexLink, isFirebaseIndexError } from "@/helpers/error";
 
 export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
   const navigate = useNavigate();
@@ -27,7 +27,6 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
   const [isIndexErrorModalOpen, setIsIndexErrorModalOpen] = useState(false);
   const [indexLink, setIndexLink] = useState(null);
 
-  // filter 상태를 useMemo로 캐싱
   const filter = useMemo(() => {
     const { minPrice, maxPrice, title, categoryId } = useFilterStore.getState();
     return { minPrice, maxPrice, title, categoryId };
@@ -48,49 +47,51 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
     setTotalCount,
   } = useProductStore();
 
-  // useLoadProducts를 사용하여 제품 데이터를 불러옴
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["products", currentPage, filter],
     queryFn: () => fetchProducts(filter, pageSize, currentPage),
   });
 
-  // Todo: 에러 처리
-  // useEffect(() => {
-  //   console.log(isError);
-  //   console.log(error);
-  //   if (isError && error) {
-  //     const errorMessage =
-  //       error instanceof Error ? isError.message : String(isError);
+  useEffect(() => {
+    if (isError && error) {
+      const errorMessage =
+        error instanceof Error ? isError.message : String(isError);
 
-  //     if (isFirebaseIndexError(errorMessage)) {
-  //       const link = extractIndexLink(errorMessage);
-  //       setIndexLink(link);
-  //       setIsIndexErrorModalOpen(true); // 인덱스 오류 모달을 열기
-  //     } else {
-  //       console.error("Unhandled error:", errorMessage); // 다른 오류 처리
-  //     }
-  //   }
-  // }, [isError, error]);
-
-  const handleCartAction = (product) => {
-    if (isLogin && user) {
-      const cartItem = { ...product, count: 1 };
-      addCartItem({ item: cartItem, userId: user.uid, count: 1 });
-      console.log(`${product.title} 상품이 \n장바구니에 담겼습니다.`);
-    } else {
-      navigate(pageRoutes.login);
+      if (isFirebaseIndexError(errorMessage)) {
+        const link = extractIndexLink(errorMessage);
+        setIndexLink(link);
+        setIsIndexErrorModalOpen(true);
+      } else {
+        console.error("Unhandled error:", errorMessage);
+      }
     }
-  };
+  }, [isError, error]);
 
-  const handlePurchaseAction = (product) => {
-    if (isLogin && user) {
-      const cartItem = { ...product, count: 1 };
-      addCartItem({ item: cartItem, userId: user.uid, count: 1 });
-      navigate(pageRoutes.cart);
-    } else {
-      navigate(pageRoutes.login);
-    }
-  };
+  const handleCartAction = useCallback(
+    (product) => {
+      if (isLogin && user) {
+        const cartItem = { ...product, count: 1 };
+        addCartItem({ item: cartItem, userId: user.uid, count: 1 });
+        console.log(`${product.title} 상품이 \n장바구니에 담겼습니다.`);
+      } else {
+        navigate(pageRoutes.login);
+      }
+    },
+    [isLogin, user?.uid, addCartItem]
+  );
+
+  const handlePurchaseAction = useCallback(
+    (product) => {
+      if (isLogin && user) {
+        const cartItem = { ...product, count: 1 };
+        addCartItem({ item: cartItem, userId: user.uid, count: 1 });
+        navigate(pageRoutes.cart);
+      } else {
+        navigate(pageRoutes.login);
+      }
+    },
+    [isLogin, user?.uid, addCartItem]
+  );
 
   const loadMore = () => {
     setCurrentPage((prevPage) => prevPage + 1);
@@ -116,14 +117,7 @@ export const ProductList = ({ pageSize = PRODUCT_PAGE_SIZE }) => {
       setTotalCount(data.totalCount);
       setCurrentPage(currentPage);
     }
-  }, [
-    data,
-    setProducts,
-    setHasNextPage,
-    setTotalCount,
-    setCurrentPage,
-    currentPage,
-  ]);
+  }, [data, setProducts, setHasNextPage, setTotalCount, currentPage]);
 
   useEffect(() => {
     setCurrentPage(1);
